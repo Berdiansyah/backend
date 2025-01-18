@@ -2,9 +2,16 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require("cookie-parser");
+
+//Confif
 const connectDB = require('./config/db');
+
+//Middleware
 const { responseHandler } = require('./middleware/ResponseHandler')
 const { protect } = require('./middleware/AuthMiddleware')
+
+//Routes
 const authRoutes = require('./routes/AuthRoutes');
 const userRoutes = require('./routes/UserRoutes')
 
@@ -14,6 +21,7 @@ const app = express();
 connectDB();
 
 // Middleware
+app.use(cookieParser());
 app.use(express.json());
 app.use(responseHandler);
 app.use(

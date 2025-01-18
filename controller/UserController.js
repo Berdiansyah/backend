@@ -1,84 +1,81 @@
 const User = require('../models/UserModels');
 const jwt = require('jsonwebtoken');
-const apiResponse = require('../utils/ApiResponse')
-const STATUS_CODES = require('../constants/StatusCode')
-const STATUS_MESSAGES = require('../constants/Message')
+const apiResponse = require('../utils/ApiResponse');
+const STATUS_CODES = require('../constants/StatusCode');
+const STATUS_MESSAGES = require('../constants/Message');
+const logger = require('../utils/Logger')
+
+// Log startup message to verify logger is working
+logger.info('Logger initialized successfully');
 
 const register = async (req, res) => {
+  logger.info('Starting user registration process', { email: req.body.email });
   try {
-      const { email, password, name, role } = req.body;
+    const { email, password, name, role } = req.body;
 
-      const userExists = await User.findOne({ email });
-      if (userExists) {
-          return res.status(400).json(apiResponse.error('User already exists',STATUS_CODES.BAD_REQUEST,null));
-      }
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      logger.warn('Registration failed: User already exists', { email });
+      return res.status(400).json(apiResponse.error('User already exists', STATUS_CODES.BAD_REQUEST, null));
+    }
 
-      const user = await User.create({
-          email,
-          password,
-          name,
-          role
-      });
+    const user = await User.create({
+      email,
+      password,
+      name,
+      role
+    });
 
-      const data = {
-          _id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role
-      }
+    const data = {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role
+    }
 
-      res.status(201).json(apiResponse.success(STATUS_MESSAGES[200] ,STATUS_CODES.OK,data));
+    logger.info('User registered successfully', { userId: user._id, email: user.email });
+    res.status(201).json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, data));
   } catch (error) {
-      res.status(500).json(apiResponse.error(error.message,STATUS_CODES.INTERNAL_SERVER_ERROR,null));
+    logger.error('Error in user registration', { error: error.message, stack: error.stack });
+    res.status(500).json(apiResponse.error(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR, null));
   }
 };
 
 const getAllUsers = async (req, res) => {
+  logger.info('Fetching all users');
   try {
-  
-    // Ambil semua user dari database
-    const users = await User.find().select('-password'); // Jangan sertakan password
-
-    res.status(200).json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK,users));
+    const users = await User.find().select('-password');
+    logger.info('Successfully retrieved all users', { count: users.length });
+    res.status(200).json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, users));
   } catch (error) {
+    logger.error('Error fetching all users', { error: error.message, stack: error.stack });
     res.status(500).json({ message: error.message });
   }
 };
 
 const getUser = async (req, res) => {
+  logger.info('Attempting to fetch user details');
   try {
-    const token = req.cookies.accessToken; // Ambil JWT dari cookies
+    const token = req.cookies.accessToken;
     if (!token) {
+      logger.warn('Access token missing in request');
       return res
         .status(401)
         .json(apiResponse.error('Access token is missing', STATUS_CODES.UNAUTHORIZED, null));
     }
 
-    // Verifikasi token JWT
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        // Token invalid atau expired
-        if (err.name === 'TokenExpiredError') {
-          return res
-            .status(401)
-            .json(apiResponse.error('Access token has expired', STATUS_CODES.UNAUTHORIZED, null));
-        }
-        return res
-          .status(401)
-          .json(apiResponse.error('Invalid access token', STATUS_CODES.UNAUTHORIZED, null));
-      }
-
-      // Token valid, ambil data pengguna dari database
-      const user = await User.findById(decoded._id).select('-password'); // Hindari mengembalikan password
+      const user = await User.findById(req.user._id).select('-password');
       if (!user) {
+        logger.warn('User not found', { userId: decoded._id });
         return res
           .status(404)
           .json(apiResponse.error('User not found', STATUS_CODES.NOT_FOUND, null));
       }
 
+      logger.info('User details retrieved successfully', { userId: user._id });
       res.status(200).json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, user));
-    });
   } catch (error) {
+    logger.error('Error fetching user details', { error: error.message, stack: error.stack });
     res
       .status(500)
       .json(apiResponse.error(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR, null));
@@ -86,17 +83,17 @@ const getUser = async (req, res) => {
 };
 
 const editUser = async (req, res) => {
+  logger.info('Starting user edit process', { userId: req.user._id });
   try {
     const { name, email, role } = req.body;
 
-    // Validasi input
     if (!name && !email && !role) {
+      logger.warn('Edit user failed: No fields provided for update', { userId: req.user._id });
       return res.status(400).json(
         apiResponse.error('At least one field is required to update', STATUS_CODES.BAD_REQUEST, null)
       );
     }
 
-    // Cari dan update user sekaligus
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       {
@@ -106,22 +103,23 @@ const editUser = async (req, res) => {
           role: role || undefined
         }
       },
-      { 
-        new: true,      // Mengembalikan dokumen yang sudah diupdate
-        select: '-password' // Exclude password dari response
+      {
+        new: true,
+        select: '-password'
       }
     );
 
     if (!updatedUser) {
+      logger.warn('User not found during edit', { userId: req.user._id });
       return res.status(404).json(
         apiResponse.error('User not found', STATUS_CODES.NOT_FOUND, null)
       );
     }
 
-    // Jika update email, cek apakah email sudah digunakan
     if (email && email !== updatedUser.email) {
       const emailExists = await User.findOne({ email, _id: { $ne: req.user._id } });
       if (emailExists) {
+        logger.warn('Edit user failed: Email already in use', { email });
         return res.status(400).json(
           apiResponse.error('Email already in use', STATUS_CODES.BAD_REQUEST, null)
         );
@@ -135,11 +133,13 @@ const editUser = async (req, res) => {
       role: updatedUser.role
     };
 
+    logger.info('User updated successfully', { userId: updatedUser._id });
     res.status(200).json(
       apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, userData)
     );
 
   } catch (error) {
+    logger.error('Error updating user', { error: error.message, stack: error.stack, userId: req.user._id });
     res.status(500).json(
       apiResponse.error(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR, null)
     );
@@ -147,22 +147,23 @@ const editUser = async (req, res) => {
 };
 
 const deleteUser = async (req, res) => {
+  logger.info('Starting user deletion process', { userId: req.user._id });
   try {
-    // Cari user berdasarkan ID yang ada di JWT
     const user = await User.findById(req.user._id);
 
     if (!user) {
+      logger.warn('Delete user failed: User not found', { userId: req.user._id });
       return res.status(404).json(apiResponse.error('User not found', STATUS_CODES.NOT_FOUND, null));
     }
 
-    // Hapus user
     await User.findByIdAndDelete(req.user._id);
-
+    
+    logger.info('User deleted successfully', { userId: req.user._id });
     res.status(200).json(apiResponse.success('User deleted successfully', STATUS_CODES.OK, null));
   } catch (error) {
+    logger.error('Error deleting user', { error: error.message, stack: error.stack, userId: req.user._id });
     res.status(500).json({ message: error.message });
   }
 };
 
-
-module.exports = {register, getUser, getAllUsers, deleteUser, editUser}
+module.exports = { register, getUser, getAllUsers, deleteUser, editUser };
