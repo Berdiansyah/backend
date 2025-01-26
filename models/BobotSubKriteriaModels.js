@@ -21,7 +21,7 @@ const BobotSubKriteriaSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model(
-  "Bobot_sub_kriteria",
+  "bobot_sub_kriteria",
   BobotSubKriteriaSchema,
   "bobot_sub_kriteria"
 );

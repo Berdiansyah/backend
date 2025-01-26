@@ -8,7 +8,7 @@ const logger = require('../utils/Logger');
 const generateAccessToken = (id) => {
     logger.info('Generating access token', { userId: id });
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '15m'
+        expiresIn: '120m' //waktu token expired
     });
 };
 
@@ -95,12 +95,12 @@ const refresh = async (req, res) => {
         }
 
         const accessToken = generateAccessToken(user._id);
-        res.cookie('accesToken', accessToken,{
+        res.cookie('accessToken', accessToken,{
             httpOnly:true
         });
 
         logger.info('Access token refreshed successfully', { userId: user._id });
-        res.json({ accessToken });
+        res.json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, accessToken));
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
             logger.warn('Token refresh failed: Refresh token expired');

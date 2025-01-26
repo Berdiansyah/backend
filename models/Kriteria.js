@@ -7,4 +7,4 @@ const Kriteria = new mongoose.Schema({
     }
 }, { timestamps: false, versionKey: false });
 
-module.exports = mongoose.model('Kriteria', Kriteria, 'kriteria');
+module.exports = mongoose.model('kriteria', Kriteria, 'kriteria');

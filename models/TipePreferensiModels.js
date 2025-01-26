@@ -7,4 +7,4 @@ const TypePreferensiSchema = new mongoose.Schema({
     },
 }, { timestamps: false, versionKey: false });
 
-module.exports = mongoose.model('TypePreferensi', TypePreferensiSchema, 'typePreferensi');
+module.exports = mongoose.model('typePreferensi', TypePreferensiSchema, 'typePreferensi');

@@ -115,6 +115,26 @@ const getSubKriteriaById = async (req, res) => {
   }
 }
 
+const getSubKriteriaNonFormated = async (re,res) => {
+  logger.info("Fetching all sub kriteria");
+  try {
+    const subKriteria = await SubKriteria.find();
+    logger.info("sub Kriteria query result:", {
+      count: subKriteria.length,
+      data: subKriteria
+    });
+    res
+      .status(200)
+      .json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, subKriteria));
+  } catch (error) {
+    logger.error("Error fetching all sub kriteria", {
+      error: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json(apiResponse.error(error.message, 500, null));
+  }
+}
+
 const addSubKriteria = async (req, res) => {
   logger.info("Starting sub kriteria registration process", {
     nama: req.body.sub_kriteria,
@@ -249,4 +269,4 @@ const deleteSubKriteria = async (req, res) => {
   }
 }
 
-module.exports = { getAllSubKriteria, getSubKriteriaById, addSubKriteria, updateSubKriteria, deleteSubKriteria };
+module.exports = { getAllSubKriteria, getSubKriteriaById, addSubKriteria, updateSubKriteria, deleteSubKriteria, getSubKriteriaNonFormated };

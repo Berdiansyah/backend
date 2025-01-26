@@ -34,4 +34,4 @@ const SubKriteriaSchema = new mongoose.Schema({
     },
 }, { timestamps: false, versionKey: false });
 
-module.exports = mongoose.model('Sub_Kriteria', SubKriteriaSchema, 'sub_kriteria');
+module.exports = mongoose.model('sub_kriteria', SubKriteriaSchema, 'sub_kriteria');

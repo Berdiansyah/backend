@@ -11,4 +11,4 @@ const ProdukSchema = new mongoose.Schema({
     },
 }, { timestamps: false, versionKey: false });
 
-module.exports = mongoose.model('Produk', ProdukSchema, 'produk');
+module.exports = mongoose.model('produk', ProdukSchema,'produk');

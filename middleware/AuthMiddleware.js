@@ -22,7 +22,7 @@ const protect = async (req, res, next) => {
         method,
         ip: req.ip,
       });
-      return res.status(401).json({ message: 'Not authorized, no valid token provided' });
+      return res.status(405).json({ message: 'Not authorized, no valid token provided' });
     }
 
     // Verifikasi token menggunakan JWT
@@ -48,6 +48,7 @@ const protect = async (req, res, next) => {
     });
 
     // Tambahkan data user ke objek request
+    logger.info(user)
     req.user = user;
 
     next();
@@ -58,7 +59,7 @@ const protect = async (req, res, next) => {
         path,
         method,
       });
-      return res.status(401).json({ message: 'Token expired, please log in again' });
+      return res.status(555).json({ message: 'Token expired, please log in again' });
     }
 
     if (error.name === 'JsonWebTokenError') {
@@ -67,7 +68,7 @@ const protect = async (req, res, next) => {
         path,
         method,
       });
-      return res.status(401).json({ message: 'Invalid token' });
+      return res.status(556).json({ message: 'Invalid token' });
     }
 
     logger.error('Authentication middleware error', {

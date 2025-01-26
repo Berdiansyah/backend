@@ -74,7 +74,8 @@ const updateBobotSubKriteria = async (req, res) => {
   });
   try {
     const { _id, id_sub_kriteria, nama_bobot, nilai_bobot } = req.body;
-    const bobotSubKriteria = await BobotSubKriteria.findOneAndUpdate(_id ,{ 
+
+    const bobotSubKriteria = await BobotSubKriteria.findByIdAndUpdate(_id ,{ 
       id_sub_kriteria, nama_bobot, nilai_bobot 
     },
       { new: true }

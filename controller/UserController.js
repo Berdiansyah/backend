@@ -44,6 +44,14 @@ const register = async (req, res) => {
 const getAllUsers = async (req, res) => {
   logger.info('Fetching all users');
   try {
+    const token = req.cookies.accessToken;
+    if (!token) {
+      logger.warn('Access token missing in request');
+      return res
+        .status(401)
+        .json(apiResponse.error('Access token is missing', STATUS_CODES.UNAUTHORIZED, null));
+    }
+
     const users = await User.find().select('-password');
     logger.info('Successfully retrieved all users', { count: users.length });
     res.status(200).json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, users));
@@ -140,30 +148,80 @@ const editUser = async (req, res) => {
 
   } catch (error) {
     logger.error('Error updating user', { error: error.message, stack: error.stack, userId: req.user._id });
+    if(error.codeName == "DuplicateKey"){
+      return res.status(500).json(
+        apiResponse.error("Email yang dimasukan sudah terdaftar", STATUS_CODES.INTERNAL_SERVER_ERROR, null)
+      );
+    }else{
+      return res.status(500).json(
+        apiResponse.error("Terjadi kesalahan saat mengupdate data", STATUS_CODES.INTERNAL_SERVER_ERROR, null)
+      );
+    }
+  }
+};
+
+const changePassword = async (req, res) => {
+  logger.info('Starting password change process', { userId: req.user._id });
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    // Find user and verify current password
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      logger.warn('Password change failed: User not found', { userId: req.user._id });
+      return res.status(404).json(
+        apiResponse.error('User not found', STATUS_CODES.NOT_FOUND, null)
+      );
+    }
+
+    // Check current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      logger.warn('Password change failed: Current password incorrect');
+      return res.status(400).json(
+        apiResponse.error('Current password is incorrect', STATUS_CODES.BAD_REQUEST, null)
+      );
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    logger.info('Password changed successfully', { userId: user._id });
+    res.status(200).json(
+      apiResponse.success('Password changed successfully', STATUS_CODES.OK, null)
+    );
+
+  } catch (error) {
+    logger.error('Error changing password', { 
+      error: error.message, 
+      stack: error.stack, 
+      userId: req.user._id 
+    });
     res.status(500).json(
-      apiResponse.error(error.message, STATUS_CODES.INTERNAL_SERVER_ERROR, null)
+      apiResponse.error('Error changing password', STATUS_CODES.INTERNAL_SERVER_ERROR, null)
     );
   }
 };
 
 const deleteUser = async (req, res) => {
-  logger.info('Starting user deletion process', { userId: req.user._id });
+  logger.info('Starting user deletion process', { userId: req.body._id });
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.body._id);
 
     if (!user) {
-      logger.warn('Delete user failed: User not found', { userId: req.user._id });
+      logger.warn('Delete user failed: User not found', { userId: req.body._id });
       return res.status(404).json(apiResponse.error('User not found', STATUS_CODES.NOT_FOUND, null));
     }
 
-    await User.findByIdAndDelete(req.user._id);
+    await User.findByIdAndDelete(req.body._id);
     
-    logger.info('User deleted successfully', { userId: req.user._id });
+    logger.info('User deleted successfully', { userId: req.body._id });
     res.status(200).json(apiResponse.success('User deleted successfully', STATUS_CODES.OK, null));
   } catch (error) {
-    logger.error('Error deleting user', { error: error.message, stack: error.stack, userId: req.user._id });
+    logger.error('Error deleting user', { error: error.message, stack: error.stack, userId: req.body._id });
     res.status(500).json({ message: error.message });
   }
 };
 
-module.exports = { register, getUser, getAllUsers, deleteUser, editUser };
+module.exports = { register, getUser, getAllUsers, deleteUser, editUser, changePassword };
