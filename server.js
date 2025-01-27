@@ -41,7 +41,6 @@ app.use(
 // Routes
 app.use('/auth', authRoutes);
 app.use('/user', protect, userRoutes )
-// app.use('/user', userRoutes )
 
 app.use('/produk', protect, produkRoutes )
 app.use('/typePreferensi', protect, typePreferensiRoutes )
@@ -49,12 +48,6 @@ app.use('/kriteria' , protect, kriteriaRoutes )
 app.use('/subKriteria' , protect, subKriteriaRoutes )
 app.use('/bobotSubKriteria' , protect, bobotSubKriteriaRoutes )
 app.use('/bobotProduk' , protect, bobotProdukRoutes )
-// app.use('/produk', produkRoutes )
-// app.use('/typePreferensi', typePreferensiRoutes )
-// app.use('/kriteria' , kriteriaRoutes )
-// app.use('/subKriteria' , subKriteriaRoutes )
-// app.use('/bobotSubKriteria' , bobotSubKriteriaRoutes )
-// app.use('/bobotProduk' , bobotProdukRoutes )
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
