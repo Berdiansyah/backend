@@ -139,7 +139,7 @@ const getBobotProdukbyId = async (req, res) => {
 const addBobotProduk = async (req, res) => {
   try {
     const { id_produk, id_bobot_sub_kriteria } = req.body;
-
+    console.log(id_bobot_sub_kriteria)
     // Check if a record with the same product already exists
     const existingBobotProduk = await BobotProduk.findOne({
       id_produk: id_produk,

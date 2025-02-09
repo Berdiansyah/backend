@@ -22,7 +22,7 @@ const protect = async (req, res, next) => {
         method,
         ip: req.ip,
       });
-      return res.status(405).json({ message: 'Not authorized, no valid token provided' });
+      return res.status(556).json({ message: 'Not authorized, no valid token provided' });
     }
 
     // Verifikasi token menggunakan JWT
