@@ -135,12 +135,35 @@ const getSubKriteriaNonFormated = async (re,res) => {
   }
 }
 
+const getSubKriteriaLength = async (re,res) => {
+  logger.info("Fetching all sub kriteria");
+  try {
+    const subKriteria = (await SubKriteria.find()).length;
+    logger.info("sub Kriteria query result:", {
+      count: subKriteria.length,
+      data: subKriteria
+    });
+    res
+      .status(200)
+      .json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, subKriteria));
+  } catch (error) {
+    logger.error("Error fetching all sub kriteria", {
+      error: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json(apiResponse.error(error.message, 500, null));
+  }
+}
+
 const addSubKriteria = async (req, res) => {
   logger.info("Starting sub kriteria registration process", {
     nama: req.body.sub_kriteria,
   });
   try {
     const { id_kriteria, id_type, nama_sub_kriteria, min_max, p, q, s } = req.body;
+
+    const existingSubKriteria = await SubKriteria.findOne({id_kriteria, id_type, nama_sub_kriteria});
+    if (existingSubKriteria) return res.status(400).json(apiResponse.error(`Sub Kriteria ${nama_sub_kriteria} sudah di terdapat di sistem`, 400, null));
 
     const addSubKriteria = await SubKriteria.create({
       id_kriteria,
@@ -269,4 +292,4 @@ const deleteSubKriteria = async (req, res) => {
   }
 }
 
-module.exports = { getAllSubKriteria, getSubKriteriaById, addSubKriteria, updateSubKriteria, deleteSubKriteria, getSubKriteriaNonFormated };
+module.exports = { getAllSubKriteria, getSubKriteriaById, addSubKriteria, updateSubKriteria, deleteSubKriteria, getSubKriteriaNonFormated, getSubKriteriaLength };

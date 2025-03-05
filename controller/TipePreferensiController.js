@@ -32,6 +32,9 @@ const addTypePreferensi = async (req, res) => {
   try {
     const { type } = req.body;
 
+    const existingtypePreferensi = await TypePreferensi.findOne({type})
+    if(existingtypePreferensi) return res.status(400).json(apiResponse.error(`Type preferensi ${type} sudah terdapat di dalam sistem`, 400, null));
+
     const addTypePreferensi = await TypePreferensi.create({
       type,
     });
@@ -70,6 +73,9 @@ const updateTypePreferensi = async (req, res) => {
   });
   try {
     const { _id, type } = req.body;
+
+    const existingtypePreferensi = await TypePreferensi.findOne({type})
+    if(existingtypePreferensi) return res.status(400).json(apiResponse.error(`Type preferensi ${type} sudah terdapat di dalam sistem`, 400, null));
 
     const updateTypePreferensi = await TypePreferensi.findByIdAndUpdate(_id, {
       type,

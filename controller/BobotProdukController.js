@@ -1,5 +1,3 @@
-/** @format */
-
 const BobotProduk = require("../models/BobotProdukModels");
 //template
 const apiResponse = require("../utils/ApiResponse");
@@ -139,7 +137,6 @@ const getBobotProdukbyId = async (req, res) => {
 const addBobotProduk = async (req, res) => {
   try {
     const { id_produk, id_bobot_sub_kriteria } = req.body;
-    console.log(id_bobot_sub_kriteria)
     // Check if a record with the same product already exists
     const existingBobotProduk = await BobotProduk.findOne({
       id_produk: id_produk,
@@ -147,36 +144,45 @@ const addBobotProduk = async (req, res) => {
 
     if (existingBobotProduk) {
       // Check if any of the sub-kriteria weights already exist
-      const duplicateSubKriteria =
-        existingBobotProduk.id_bobot_sub_kriteria.some((existingId) =>
-          id_bobot_sub_kriteria.includes(existingId.toString())
-        );
+      // const duplicateSubKriteria =
+      //   existingBobotProduk.id_bobot_sub_kriteria.some((existingId) =>
+      //     id_bobot_sub_kriteria.includes(existingId.toString())
+      //   );
 
-      if (duplicateSubKriteria) {
-        return res
-          .status(400)
-          .json(
-            apiResponse.error(
-              "Bobot produk dan bobot sub kriteria untuk produk ini sudah ada",
-              400,
-              null
-            )
-          );
-      }
+      // if (duplicateSubKriteria) {
+      //   return res
+      //     .status(400)
+      //     .json(
+      //       apiResponse.error(
+      //         "Bobot produk dan bobot sub kriteria untuk produk ini sudah ada",
+      //         400,
+      //         null
+      //       )
+      //     );
+      // }
 
       // If no duplicate, append new sub-kriteria to existing record
-      existingBobotProduk.id_bobot_sub_kriteria.push(...id_bobot_sub_kriteria);
-      await existingBobotProduk.save();
+      // existingBobotProduk.id_bobot_sub_kriteria.push(...id_bobot_sub_kriteria);
+      // await existingBobotProduk.save();
 
+      // return res
+      //   .status(200)
+      //   .json(
+      //     apiResponse.success(
+      //       "Bobot sub kriteria berhasil ditambahkan",
+      //       200,
+      //       existingBobotProduk
+      //     )
+      //   );
       return res
-        .status(200)
-        .json(
-          apiResponse.success(
-            "Bobot sub kriteria berhasil ditambahkan",
-            200,
-            existingBobotProduk
-          )
-        );
+      .status(400)
+      .json(
+        apiResponse.error(
+          "Bobot produk dan bobot sub kriteria untuk produk ini sudah ada",
+          400,
+          null
+        )
+      );
     }
 
     // If no existing record, create new
@@ -217,36 +223,43 @@ const updateBobotProduk = async (req, res) => {
     });
 
     if (existingBobotProduk) {
-      return res
-        .status(400)
-        .json(
-          apiResponse.error(
-            "Bobot untuk produk ini sudah ada",
-            400,
-            null
-          )
+      const duplicateSubKriteria =
+        existingBobotProduk.id_bobot_sub_kriteria.some((existingId) =>
+          id_bobot_sub_kriteria.includes(existingId.toString())
         );
+
+      if (duplicateSubKriteria) {
+        return res
+          .status(400)
+          .json(
+            apiResponse.error(
+              "Bobot produk dan bobot sub kriteria untuk produk ini sudah ada",
+              400,
+              null
+            )
+          );
+      }
+
+      const updateBobotProduk = await BobotProduk.findByIdAndUpdate(
+        _id,
+        {
+          id_produk,
+          id_bobot_sub_kriteria,
+        },
+        { new: true }
+      );
+
+      const data = {
+        _id: updateBobotProduk._id,
+        id_produk: updateBobotProduk.id_produk,
+        id_bobot_sub_kriteria: updateBobotProduk.id_bobot_sub_kriteria,
+      };
+
+      logger.info("Bobot Produk updated successfully", data);
+      res
+        .status(200)
+        .json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, data));
     }
-
-    const updateBobotProduk = await BobotProduk.findByIdAndUpdate(
-      _id,
-      {
-        id_produk,
-        id_bobot_sub_kriteria,
-      },
-      { new: true }
-    );
-
-    const data = {
-      _id: updateBobotProduk._id,
-      id_produk: updateBobotProduk.id_produk,
-      id_bobot_sub_kriteria: updateBobotProduk.id_bobot_sub_kriteria,
-    };
-
-    logger.info("Bobot Produk updated successfully", data);
-    res
-      .status(200)
-      .json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, data));
   } catch (error) {
     logger.error("Error in Bobot Produk update", {
       error: error.message,

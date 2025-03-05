@@ -32,6 +32,9 @@ const addKriteria = async (req, res) => {
   try {
     const { kriteria } = req.body;
 
+    const existingKriteria = await Kriteria.findOne({ kriteria });
+    if (existingKriteria) return res.status(400).json(apiResponse.error(`Kriteria ${kriteria} sudah di masukan`, 400, null));
+
     const addKriteria = await Kriteria.create({
       kriteria
     });
@@ -70,6 +73,9 @@ const updateKriteria = async (req, res) => {
   });
   try {
     const { _id ,kriteria } = req.body;
+
+    const existingKriteria = await Kriteria.findOne({ kriteria });
+    if (existingKriteria) return res.status(400).json(apiResponse.error(`Kriteria ${kriteria} sudah di masukan`, 400, null));
 
     const updateKriteria = await Kriteria.findByIdAndUpdate(_id, {
       kriteria

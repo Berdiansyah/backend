@@ -16,7 +16,7 @@ const register = async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) {
       logger.warn('Registration failed: User already exists', { email });
-      return res.status(400).json(apiResponse.error('User already exists', STATUS_CODES.BAD_REQUEST, null));
+      return res.status(400).json(apiResponse.error(`User dengan email ${email} sudah terdaftar`, STATUS_CODES.BAD_REQUEST, null));
     }
 
     const user = await User.create({
@@ -93,7 +93,7 @@ const getUser = async (req, res) => {
 const editUser = async (req, res) => {
   logger.info('Starting user edit process', { userId: req.user._id });
   try {
-    const { name, email, role } = req.body;
+    const { name, email, role, _id } = req.body;
 
     if (!name && !email && !role) {
       logger.warn('Edit user failed: No fields provided for update', { userId: req.user._id });
@@ -102,37 +102,42 @@ const editUser = async (req, res) => {
       );
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $set: {
-          name: name || undefined,
-          email: email || undefined,
-          role: role || undefined
-        }
-      },
-      {
-        new: true,
-        select: '-password'
-      }
-    );
-
-    if (!updatedUser) {
-      logger.warn('User not found during edit', { userId: req.user._id });
+    // Get current user data before update
+    const currentUser = await User.findById(_id);
+    if (!currentUser) {
+      logger.warn('User not found during edit', { userId: _id });
       return res.status(404).json(
         apiResponse.error('User not found', STATUS_CODES.NOT_FOUND, null)
       );
     }
 
-    if (email && email !== updatedUser.email) {
-      const emailExists = await User.findOne({ email, _id: { $ne: req.user._id } });
+    // Mempersiapkan objek updateData
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (role !== undefined) updateData.role = role;
+    
+    // Validate email if changed
+    if (email !== currentUser.email) {
+      const emailExists = await User.findOne({ email, _id: { $ne: _id } });
       if (emailExists) {
         logger.warn('Edit user failed: Email already in use', { email });
         return res.status(400).json(
-          apiResponse.error('Email already in use', STATUS_CODES.BAD_REQUEST, null)
+          apiResponse.error(`User dengan email ${email} sudah terdaftar`, STATUS_CODES.BAD_REQUEST, null)
         );
       }
+      // Hanya tambahkan email ke updateData jika berbeda
+      updateData.email = email;
     }
+
+    // Melakukan update dengan data yang sama untuk kedua jalur
+    const updatedUser = await User.findByIdAndUpdate(
+      _id,  // Gunakan _id dari request body, bukan req.user._id
+      { $set: updateData },
+      {
+        new: true,
+        select: '-password'
+      }
+    );
 
     const userData = {
       _id: updatedUser._id,
@@ -142,13 +147,13 @@ const editUser = async (req, res) => {
     };
 
     logger.info('User updated successfully', { userId: updatedUser._id });
-    res.status(200).json(
+    return res.status(200).json(
       apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, userData)
     );
 
   } catch (error) {
-    logger.error('Error updating user', { error: error.message, stack: error.stack, userId: req.user._id });
-    if(error.codeName == "DuplicateKey"){
+    logger.error('Error updating user', { error: error.message, stack: error.stack, userId: req.body._id });
+    if(error.codeName === "DuplicateKey"){
       return res.status(500).json(
         apiResponse.error("Email yang dimasukan sudah terdaftar", STATUS_CODES.INTERNAL_SERVER_ERROR, null)
       );

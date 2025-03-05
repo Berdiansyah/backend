@@ -32,6 +32,9 @@ const addProduk = async (req, res) => {
   try {
     const { produk, kategori } = req.body;
 
+    const checkProduk = await Produk.findOne({ produk });
+    if (checkProduk) return res.status(400).json(apiResponse.error(`Produk ${produk} sudah di masukan`, 400, null));
+
     const addProduk = await Produk.create({
       produk,
       kategori,

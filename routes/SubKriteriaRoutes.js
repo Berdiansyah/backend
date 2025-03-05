@@ -4,6 +4,7 @@ const subKriteriaController = require('../controller/SubKriteriaController');
 
 router.get('/getAllSubKriteria', subKriteriaController.getAllSubKriteria);
 router.get('/getAllSubKriteriaNonFormated', subKriteriaController.getSubKriteriaNonFormated);
+router.get('/getSubKriteriaLength', subKriteriaController.getSubKriteriaLength);
 router.post('/getSubKriteriaById', subKriteriaController.getSubKriteriaById);
 router.post('/addSubKriteria', subKriteriaController.addSubKriteria);
 router.put('/editSubKriteria', subKriteriaController.updateSubKriteria);
