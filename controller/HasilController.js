@@ -202,7 +202,16 @@ const addHasil = async (req, res) => {
     const { create_by, create_date, month, data } = req.body;
 
     const isExisting = await Hasil.findOne({ month });
-    if (isExisting) return res.status(400).json(apiResponse.error(`Perhitungan bulan ${month} sudah tersiman, harap hapus terlebih dahulu datannya untuk memasukan perhitungan yang baru`, 400, null)); 
+    if (isExisting)
+      return res
+        .status(400)
+        .json(
+          apiResponse.error(
+            `Perhitungan bulan ${month} sudah tersiman, harap hapus terlebih dahulu datannya untuk memasukan perhitungan yang baru`,
+            400,
+            null
+          )
+        );
 
     const hasil = new Hasil({
       create_by,
@@ -227,16 +236,14 @@ const addHasil = async (req, res) => {
         )
       );
   }
-}
+};
 
 const getAllHasil = async (req, res) => {
   try {
     const hasil = await Hasil.find();
     res
       .status(200)
-      .json(
-        apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, hasil)
-      );
+      .json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, hasil));
   } catch (error) {
     res
       .status(500)
@@ -248,7 +255,7 @@ const getAllHasil = async (req, res) => {
         )
       );
   }
-}
+};
 
 const getHasilByMonth = async (req, res) => {
   try {
@@ -256,9 +263,7 @@ const getHasilByMonth = async (req, res) => {
     const hasil = await Hasil.findOne({ month });
     res
       .status(200)
-      .json(
-        apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, hasil)
-      );
+      .json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, hasil));
   } catch (error) {
     res
       .status(500)
@@ -270,12 +275,12 @@ const getHasilByMonth = async (req, res) => {
         )
       );
   }
-}
+};
 
 const deleteHasil = async (req, res) => {
   logger.info("Starting product deletion process", { produkId: req.body._id });
   try {
-    const { _id } = req.body  ;
+    const { _id } = req.body;
 
     const deleteProduk = await Hasil.findByIdAndDelete(_id);
 
@@ -309,4 +314,48 @@ const deleteHasil = async (req, res) => {
   }
 };
 
-module.exports = { kategori, getAllDataToCalculate, addHasil, getAllHasil, getHasilByMonth, deleteHasil };
+const getDetailHasil = async (req, res) => {
+  logger.info("Starting selected hasil", { produkId: req.body._id });
+  try {
+    const { _id } = req.body;
+
+    const hasil = await Hasil.findById(_id);
+
+    if (!hasil) {
+      logger.warn("hasil tidak ketemu", { produkId: _id });
+      return res
+        .status(404)
+        .json(
+          apiResponse.error("hasil tidak ketemu", STATUS_CODES.NOT_FOUND, null)
+        );
+    }
+
+    logger.info("Berhasil mengambil detail hasil", { produkId: _id });
+    res
+      .status(200)
+      .json(apiResponse.success(STATUS_MESSAGES[200], STATUS_CODES.OK, hasil));
+  } catch (error) {
+    logger.error("Gagal mengambil detail hasil", {
+      error: error.message,
+      stack: error.stack,
+    });
+    res
+      .status(500)
+      .json(
+        apiResponse.error(
+          error.message,
+          STATUS_CODES.INTERNAL_SERVER_ERROR,
+          null
+        )
+      );
+  }
+};
+module.exports = {
+  kategori,
+  getAllDataToCalculate,
+  addHasil,
+  getAllHasil,
+  getHasilByMonth,
+  deleteHasil,
+  getDetailHasil,
+};

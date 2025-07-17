@@ -49,8 +49,8 @@ app.use('/kriteria' , protect, kriteriaRoutes )
 app.use('/subKriteria' , protect, subKriteriaRoutes )
 app.use('/bobotSubKriteria' , protect, bobotSubKriteriaRoutes )
 app.use('/bobotProduk' , protect, bobotProdukRoutes )
-app.use('/hasil' , hasilRoutes  )
-// app.use('/hasil' , protect, hasilRoutes  )
+// app.use('/hasil' , hasilRoutes  )
+app.use('/hasil' , protect, hasilRoutes  )
 
 
 const PORT = process.env.PORT || 5000;

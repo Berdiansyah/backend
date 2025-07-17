@@ -6,7 +6,8 @@ router.get('/getKategori', hasilController.kategori);
 router.get('/getPlainData', hasilController.getAllDataToCalculate);
 router.post('/addHasil', hasilController.addHasil); 
 router.get('/getAllHasil', hasilController.getAllHasil);
-router.get('/getHasilByMonth', hasilController.getHasilByMonth);
+router.post('/getHasilByMonth', hasilController.getHasilByMonth);
 router.delete('/deleteHasil', hasilController.deleteHasil);
+router.post('/getDetailHasil', hasilController.getDetailHasil);
 
 module.exports = router;

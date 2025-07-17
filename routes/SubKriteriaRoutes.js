@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const subKriteriaController = require('../controller/SubKriteriaController');
 
 router.get('/getAllSubKriteria', subKriteriaController.getAllSubKriteria);
